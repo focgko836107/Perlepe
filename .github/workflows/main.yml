@@ -1,4 +1,4 @@
-name: Deploy My Landing Page
+name: Deploy MariaDB
 
 on:
   push:
